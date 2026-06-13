@@ -71,4 +71,4 @@ export default function CarModel({ modelPath }: Props) {
   );
 }
 
-useGLTF.preload("/models/japanese_bus_nagoya_city_bus_aichi.glb");
+useGLTF.preload("/models/bmw_i8.glb");

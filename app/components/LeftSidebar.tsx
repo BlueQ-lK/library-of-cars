@@ -27,15 +27,11 @@ const DIMENSION_ICONS: Record<string, LucideIcon> = {
 export default function LeftSidebar({ car }: { car: Car }) {
   const trimId = useDashboard((s) => s.trimId);
   const setTrim = useDashboard((s) => s.setTrim);
-  const colorId = useDashboard((s) => s.colorId);
-  const setColor = useDashboard((s) => s.setColor);
   const interiorId = useDashboard((s) => s.interiorId);
   const setInterior = useDashboard((s) => s.setInterior);
   const leftOpen = useDashboard((s) => s.leftOpen);
   const toggleLeft = useDashboard((s) => s.toggleLeft);
 
-  const activeExterior =
-    car.exteriorColors.find((c) => c.id === colorId) ?? car.exteriorColors[0];
   const activeInterior =
     car.interiorColors.find((c) => c.id === interiorId) ??
     car.interiorColors[0];
@@ -99,50 +95,6 @@ export default function LeftSidebar({ car }: { car: Car }) {
                 </button>
               );
             })}
-          </div>
-        </section>
-
-        {/* Exterior Color */}
-        <section>
-          <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Exterior Color
-          </h3>
-          <div className="flex items-center gap-2.5">
-            {car.exteriorColors.map((c) => {
-              const selected = c.id === colorId;
-              return (
-                <button
-                  key={c.id}
-                  title={c.name}
-                  onClick={() => setColor(c.id, c.hex)}
-                  className={`h-6 w-6 rounded-full transition-all ${
-                    selected
-                      ? "ring-2 ring-accent ring-offset-2"
-                      : "hover:scale-110"
-                  }`}
-                  style={{
-                    background: c.hex,
-                    boxShadow: !selected
-                      ? "inset 0 0 0 1px rgba(0,0,0,0.12)"
-                      : undefined,
-                  }}
-                >
-                  <span className="sr-only">{c.name}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <span
-              className="h-4 w-4 rounded-full"
-              style={{
-                background: activeExterior.hex,
-                boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
-              }}
-            />
-            <span className="text-xs text-muted-foreground">
-              {activeExterior.name}
-            </span>
           </div>
         </section>
 

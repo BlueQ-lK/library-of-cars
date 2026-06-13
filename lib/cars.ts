@@ -169,6 +169,21 @@ export type Car = {
 
   /** Aerodynamics Explorer dataset. */
   aero: AeroData;
+
+  /** Numeric dynamics used by the Track Lab lap simulator. */
+  dyn: DynSpec;
+};
+
+/** Numeric performance inputs for the lap simulation. */
+export type DynSpec = {
+  /** Peak power, metric horsepower. */
+  powerHp: number;
+  /** Curb mass, kilograms. */
+  massKg: number;
+  /** Manufacturer top speed, km/h. */
+  topSpeedKmh: number;
+  /** Number of forward gears (for the gear readout). */
+  gears: number;
 };
 
 export const BMW_I8: Car = {
@@ -179,7 +194,7 @@ export const BMW_I8: Car = {
   variant: "CoupÃ© Â· Plug-in Hybrid",
   year: "2020",
   tagline: "Born electric. Engineered for the road ahead.",
-  modelPath: "/models/japanese_bus_nagoya_city_bus_aichi.glb",
+  modelPath: "/models/bmw_i8.glb",
 
   trims: [
     { id: "coupe", name: "i8 CoupÃ©", price: "â‚¹2.62 Cr" },
@@ -497,6 +512,13 @@ export const BMW_I8: Car = {
         },
       },
     ],
+  },
+
+  dyn: {
+    powerHp: 369,
+    massKg: 1535,
+    topSpeedKmh: 250,
+    gears: 6,
   },
 };
 

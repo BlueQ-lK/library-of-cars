@@ -1,9 +1,11 @@
 "use client";
 
 import type { Car } from "@/lib/cars";
+import { useDashboard } from "@/lib/store";
 import { ChevronLeft, ChevronRight, Heart, Share2 } from "lucide-react";
 
 export default function Header({ car }: { car: Car }) {
+  const setLabMode = useDashboard((s) => s.setLabMode);
   return (
     <header className="flex items-center justify-between border-b border-line bg-white px-6 py-4">
       {/* Left: back + title + breadcrumb */}
@@ -31,7 +33,10 @@ export default function Header({ car }: { car: Car }) {
           <Share2 size={16} />
           Share
         </button>
-        <button className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90">
+        <button
+          onClick={() => setLabMode(true)}
+          className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
           Run Lab Test
         </button>
       </div>

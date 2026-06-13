@@ -51,9 +51,8 @@ export default function AeroPanel({ car }: { car: Car }) {
   const selected = aero.components.find((c) => c.id === selectedId);
   const m = scenario.metrics;
 
-  // Physics: aerodynamic drag from the standard drag equation rather than a
-  // hardcoded figure. Fd = ½·ρ·Cd·A·v²  (ρ = air density, v = speed in m/s).
-  // Frontal area A is measured from the loaded mesh when available.
+  // Physics: aerodynamic drag from the standard drag equation.
+  // Fd = ½·ρ·Cd·A·v²  (ρ = air density, v = speed in m/s).
   const derivedArea = useDashboard((s) => s.derivedFrontalArea);
   const frontalArea = derivedArea ?? aero.frontalAreaM2;
   const RHO = 1.225; // kg/m³ at sea level, 15 °C
