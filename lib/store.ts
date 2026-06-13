@@ -23,6 +23,8 @@ type DashboardState = {
   aeroView: AeroViewId;
   aeroScenario: AeroScenarioId;
   aeroComponent: AeroComponentId | null;
+  /** Frontal area (m²) measured from the loaded 3D mesh, null until computed. */
+  derivedFrontalArea: number | null;
 
   setTrim: (id: string) => void;
   setColor: (id: string, hex: string) => void;
@@ -36,6 +38,7 @@ type DashboardState = {
   setAeroView: (view: AeroViewId) => void;
   setAeroScenario: (scenario: AeroScenarioId) => void;
   setAeroComponent: (id: AeroComponentId | null) => void;
+  setDerivedFrontalArea: (area: number | null) => void;
 };
 
 const defaultColor = BMW_I8.exteriorColors[1]; // Protonic Blue
@@ -55,6 +58,7 @@ export const useDashboard = create<DashboardState>((set) => ({
   aeroView: "external",
   aeroScenario: "highway",
   aeroComponent: null,
+  derivedFrontalArea: null,
 
   setTrim: (id) => set({ trimId: id }),
   setColor: (id, hex) => set({ colorId: id, colorHex: hex }),
@@ -70,4 +74,5 @@ export const useDashboard = create<DashboardState>((set) => ({
   setAeroScenario: (scenario) => set({ aeroScenario: scenario }),
   setAeroComponent: (id) =>
     set((s) => ({ aeroComponent: s.aeroComponent === id ? null : id })),
+  setDerivedFrontalArea: (area) => set({ derivedFrontalArea: area }),
 }));

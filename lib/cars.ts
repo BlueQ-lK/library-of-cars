@@ -45,7 +45,7 @@ export type Metric = {
 /* Aerodynamics Explorer data model                                    */
 /* ------------------------------------------------------------------ */
 
-export type AeroViewId = "external" | "underbody" | "cooling" | "wake";
+export type AeroViewId = "all" | "external" | "underbody" | "cooling" | "wake";
 
 export type AeroScenarioId =
   | "city"
@@ -121,8 +121,10 @@ export type AeroViewMeta = {
 export type AeroData = {
   /** Baseline drag coefficient (clean configuration). */
   cd: number;
-  /** Frontal area, m². */
+  /** Frontal area, m² (fallback; the live value is measured from the mesh). */
   frontalAreaM2: number;
+  /** Real-world overall length, metres — used to scale mesh measurements. */
+  lengthM: number;
   /** Where flow separates from the body (educational note). */
   separationNote: string;
   views: AeroViewMeta[];
@@ -177,7 +179,7 @@ export const BMW_I8: Car = {
   variant: "CoupÃ© Â· Plug-in Hybrid",
   year: "2020",
   tagline: "Born electric. Engineered for the road ahead.",
-  modelPath: "/models/bmw_i8.glb",
+  modelPath: "/models/japanese_bus_nagoya_city_bus_aichi.glb",
 
   trims: [
     { id: "coupe", name: "i8 CoupÃ©", price: "â‚¹2.62 Cr" },
@@ -273,9 +275,16 @@ export const BMW_I8: Car = {
   aero: {
     cd: 0.26,
     frontalAreaM2: 2.1,
+    lengthM: 4.689,
     separationNote:
       "Airflow stays attached over the long teardrop roofline and separates cleanly at the sharp rear edge, keeping the wake compact.",
     views: [
+      {
+        id: "all",
+        name: "All Flows",
+        blurb:
+          "Every system at once — external airflow, underbody, cooling and the rear wake combined in one view.",
+      },
       {
         id: "external",
         name: "External Airflow",

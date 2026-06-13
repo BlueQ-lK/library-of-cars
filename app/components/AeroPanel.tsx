@@ -8,6 +8,7 @@ import {
   Layers,
   Thermometer,
   Tornado,
+  LayoutGrid,
   Gauge,
   X,
   ChevronLeft,
@@ -27,6 +28,7 @@ const AeroScene = dynamic(() => import("./viewer/AeroScene"), {
 });
 
 const VIEW_ICONS: Record<AeroViewId, LucideIcon> = {
+  all: LayoutGrid,
   external: Wind,
   underbody: Layers,
   cooling: Thermometer,
@@ -51,9 +53,12 @@ export default function AeroPanel({ car }: { car: Car }) {
 
   // Physics: aerodynamic drag from the standard drag equation rather than a
   // hardcoded figure. Fd = ½·ρ·Cd·A·v²  (ρ = air density, v = speed in m/s).
+  // Frontal area A is measured from the loaded mesh when available.
+  const derivedArea = useDashboard((s) => s.derivedFrontalArea);
+  const frontalArea = derivedArea ?? aero.frontalAreaM2;
   const RHO = 1.225; // kg/m³ at sea level, 15 °C
   const vms = scenario.speedKmh / 3.6; // km/h → m/s
-  const dragForce = 0.5 * RHO * m.cd * aero.frontalAreaM2 * vms * vms; // N
+  const dragForce = 0.5 * RHO * m.cd * frontalArea * vms * vms; // N
   const dragPowerKw = (dragForce * vms) / 1000; // P = F·v → kW to overcome drag
 
   return (
@@ -136,7 +141,11 @@ export default function AeroPanel({ car }: { car: Car }) {
             {/* Metrics */}
             <div className="grid grid-cols-2 gap-2">
               <Stat label="Drag Cd" value={m.cd.toFixed(2)} />
-              <Stat label="Frontal Area" value={`${aero.frontalAreaM2}`} unit="m²" />
+              <Stat
+                label={derivedArea ? "Frontal Area ✓" : "Frontal Area"}
+                value={`${frontalArea.toFixed(2)}`}
+                unit="m²"
+              />
               <Stat
                 label="Drag Force"
                 value={Math.round(dragForce).toLocaleString()}
@@ -163,6 +172,9 @@ export default function AeroPanel({ car }: { car: Car }) {
             <p className="mt-2 rounded-lg bg-surface px-2.5 py-2 text-[10px] leading-relaxed text-faint">
               Drag computed live: Fd = ½·ρ·Cd·A·v² with ρ = 1.225 kg/m³, v ={" "}
               {vms.toFixed(1)} m/s.
+              {derivedArea
+                ? " Frontal area A is measured from the 3D model; Cd is authored."
+                : ""}
             </p>
 
             <div className="mt-3 space-y-2.5">
@@ -180,7 +192,7 @@ export default function AeroPanel({ car }: { car: Car }) {
               <span className="tele-label">Components</span>
               <div className="mt-1.5 flex flex-col gap-1">
                 {aero.components.map((c) => {
-                  const relevant = c.views.includes(view);
+                  const relevant = view === "all" || c.views.includes(view);
                   return (
                     <button
                       key={c.id}
