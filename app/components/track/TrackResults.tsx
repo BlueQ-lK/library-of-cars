@@ -4,6 +4,7 @@ import type { Track } from "@/lib/tracks";
 import type { SimResult } from "@/lib/lapsim";
 import { formatLapTime } from "@/lib/lapsim";
 import { Route, Spline, Minus, Mountain, ChevronRight, Info } from "lucide-react";
+import CountUp from "../common/CountUp";
 
 export type Best = { lapTimeS: number; sectorS: [number, number, number] } | null;
 
@@ -13,12 +14,14 @@ export default function TrackResults({
   best,
   downforce,
   setDownforce,
+  onOpenReport,
 }: {
   track: Track;
   result: SimResult;
   best: Best;
   downforce: number;
   setDownforce: (d: number) => void;
+  onOpenReport: () => void;
 }) {
   const lapDelta = best ? result.lapTimeS - best.lapTimeS : 0;
   const isBest = !best || result.lapTimeS <= best.lapTimeS + 1e-6;
@@ -61,10 +64,18 @@ export default function TrackResults({
         </div>
 
         <div className="mt-2 grid grid-cols-2 gap-2">
-          <Stat label="Avg Speed" value={`${Math.round(result.avgSpeedKmh)}`} unit="km/h" />
-          <Stat label="Peak Speed" value={`${Math.round(result.peakSpeedKmh)}`} unit="km/h" />
-          <Stat label="Peak Lateral G" value={result.peakLatG.toFixed(1)} unit="g" />
-          <Stat label="Top Speed" value={`${Math.round(result.topSpeedKmh)}`} unit="km/h" />
+          <Stat label="Avg Speed" unit="km/h">
+            <CountUp value={Math.round(result.avgSpeedKmh)} />
+          </Stat>
+          <Stat label="Peak Speed" unit="km/h">
+            <CountUp value={Math.round(result.peakSpeedKmh)} />
+          </Stat>
+          <Stat label="Peak Lateral G" unit="g">
+            <CountUp value={result.peakLatG} decimals={1} />
+          </Stat>
+          <Stat label="Top Speed" unit="km/h">
+            <CountUp value={Math.round(result.topSpeedKmh)} />
+          </Stat>
         </div>
       </section>
 
@@ -115,7 +126,10 @@ export default function TrackResults({
         </p>
       </section>
 
-      <button className="mt-auto flex items-center justify-center gap-1 rounded-xl border border-line py-2.5 text-sm font-medium transition-colors hover:bg-surface">
+      <button
+        onClick={onOpenReport}
+        className="mt-auto flex items-center justify-center gap-1 rounded-xl border border-line py-2.5 text-sm font-medium transition-colors hover:bg-surface"
+      >
         View Detailed Report
         <ChevronRight size={15} />
       </button>
@@ -145,12 +159,20 @@ function Overview({
   );
 }
 
-function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
+function Stat({
+  label,
+  unit,
+  children,
+}: {
+  label: string;
+  unit?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-lg border border-line px-2.5 py-2">
       <div className="text-[10px] text-faint">{label}</div>
       <div className="tele-readout text-sm font-semibold">
-        {value}
+        {children}
         {unit ? <span className="ml-0.5 text-[10px] font-normal text-faint">{unit}</span> : null}
       </div>
     </div>

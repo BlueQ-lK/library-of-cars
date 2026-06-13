@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type { Car } from "@/lib/cars";
 import { getTrack } from "@/lib/tracks";
 import { simulateLap } from "@/lib/lapsim";
 import type { SimCar } from "@/lib/lapsim";
 import { useDashboard } from "@/lib/store";
+import { useTrackAudio } from "@/lib/useTrackAudio";
+import { downloadResultCard } from "@/lib/shareCard";
 import TrackSidebar from "./TrackSidebar";
 import TrackMap from "./TrackMap";
 import TrackTelemetry from "./TrackTelemetry";
 import TrackResults, { type Best } from "./TrackResults";
+import DetailedReport from "./DetailedReport";
 import {
   ChevronLeft,
   Heart,
@@ -19,6 +23,8 @@ import {
   RotateCcw,
   Camera,
   LineChart,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 const PLAY_DURATION_S = 16; // real seconds to watch a full lap
@@ -64,9 +70,22 @@ export default function TrackLab({ car }: { car: Car }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [showTelemetry, setShowTelemetry] = useState(true);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [soundOn, setSoundOn] = useState(false);
   const progress = useRef(0); // 0..1 around the lap
   const raf = useRef<number | null>(null);
   const last = useRef<number | null>(null);
+
+  // Engine + tyre audio tied to the current telemetry sample.
+  const cur = result.samples[Math.min(index, result.samples.length - 1)];
+  useTrackAudio({
+    enabled: soundOn,
+    playing,
+    speedKmh: cur.speedKmh,
+    throttle: cur.throttle,
+    latG: cur.latG,
+    topSpeedKmh: car.dyn.topSpeedKmh,
+  });
 
   useEffect(() => {
     if (!playing) {
@@ -106,7 +125,12 @@ export default function TrackLab({ car }: { car: Car }) {
   };
 
   return (
-    <div className="flex h-full w-full min-w-0">
+    <motion.div
+      className="relative flex h-full w-full min-w-0"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
       <TrackSidebar car={car} />
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -136,7 +160,18 @@ export default function TrackLab({ car }: { car: Car }) {
               <Heart size={16} />
               Save
             </button>
-            <button className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-medium transition-colors hover:bg-surface">
+            <button
+              onClick={() =>
+                downloadResultCard({
+                  carName: car.fullName,
+                  track,
+                  result,
+                  downforce,
+                  wet,
+                })
+              }
+              className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-medium transition-colors hover:bg-surface"
+            >
               <Share2 size={16} />
               Share
             </button>
@@ -171,6 +206,12 @@ export default function TrackLab({ car }: { car: Car }) {
                   onClick={() => setShowTelemetry((v) => !v)}
                   active={showTelemetry}
                 />
+                <Ctrl
+                  icon={soundOn ? Volume2 : VolumeX}
+                  label="Sound"
+                  onClick={() => setSoundOn((v) => !v)}
+                  active={soundOn}
+                />
               </div>
             </div>
 
@@ -189,10 +230,23 @@ export default function TrackLab({ car }: { car: Car }) {
             best={best}
             downforce={downforce}
             setDownforce={setDownforce}
+            onOpenReport={() => setReportOpen(true)}
           />
         </div>
       </div>
-    </div>
+
+      <AnimatePresence>
+        {reportOpen && (
+          <DetailedReport
+            track={track}
+            result={result}
+            best={best}
+            carName={car.fullName}
+            onClose={() => setReportOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
