@@ -3,6 +3,8 @@
 import { create } from "zustand";
 import { BMW_I8 } from "./cars";
 import type { AeroViewId, AeroScenarioId, AeroComponentId } from "./cars";
+import type { F1Setup } from "./f1";
+import { DEFAULT_F1_SETUP } from "./f1";
 
 export type StageView = "exterior" | "interior";
 
@@ -36,10 +38,14 @@ type DashboardState = {
   /** Downforce setup, 0 (low) .. 1 (high). */
   downforce: number;
 
+  // F1 Garage — data-only setup
+  f1Setup: F1Setup;
+
   setTrim: (id: string) => void;
   setColor: (id: string, hex: string) => void;
   setInterior: (id: string) => void;
   setStageView: (view: StageView) => void;
+  setCarId: (id: string) => void;
 
   toggleLeft: () => void;
   toggleRight: () => void;
@@ -56,6 +62,9 @@ type DashboardState = {
   setTrackWet: (wet: boolean) => void;
   setTrackCompare: (on: boolean) => void;
   setDownforce: (d: number) => void;
+
+  setF1Part: (patch: Partial<F1Setup>) => void;
+  resetF1Setup: () => void;
 };
 
 const defaultColor = BMW_I8.exteriorColors[1]; // Protonic Blue
@@ -84,10 +93,13 @@ export const useDashboard = create<DashboardState>((set) => ({
   trackCompare: false,
   downforce: 0.65,
 
+  f1Setup: DEFAULT_F1_SETUP,
+
   setTrim: (id) => set({ trimId: id }),
   setColor: (id, hex) => set({ colorId: id, colorHex: hex }),
   setInterior: (id) => set({ interiorId: id }),
   setStageView: (view) => set({ stageView: view }),
+  setCarId: (id) => set({ carId: id }),
 
   toggleLeft: () => set((s) => ({ leftOpen: !s.leftOpen })),
   toggleRight: () => set((s) => ({ rightOpen: !s.rightOpen })),
@@ -107,4 +119,7 @@ export const useDashboard = create<DashboardState>((set) => ({
   setTrackWet: (wet) => set({ trackWet: wet }),
   setTrackCompare: (on) => set({ trackCompare: on }),
   setDownforce: (d) => set({ downforce: Math.max(0, Math.min(1, d)) }),
+
+  setF1Part: (patch) => set((s) => ({ f1Setup: { ...s.f1Setup, ...patch } })),
+  resetF1Setup: () => set({ f1Setup: DEFAULT_F1_SETUP }),
 }));
