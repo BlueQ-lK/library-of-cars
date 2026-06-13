@@ -3,7 +3,11 @@
 import { create } from "zustand";
 import type { Car } from "./cars";
 import { CARS } from "./cars";
+import { F1_CAR } from "./f1";
 import { useDashboard } from "./store";
+
+/** Every car available to the platform (static data + the F1 garage chassis). */
+const ALL_CARS: Car[] = [...CARS, F1_CAR];
 
 /**
  * Runtime car registry.
@@ -31,8 +35,8 @@ function toMap(list: Car[]): Record<string, Car> {
 
 export const useCars = create<CarRegistry>((set) => ({
   // Seed synchronously from the static data so the first render is populated.
-  cars: toMap(CARS),
-  ids: CARS.map((c) => c.id),
+  cars: toMap(ALL_CARS),
+  ids: ALL_CARS.map((c) => c.id),
   loaded: true,
 
   initCars: (list) => set({ cars: toMap(list), ids: list.map((c) => c.id), loaded: true }),
@@ -52,7 +56,7 @@ export function useCurrentCar(): Car {
   const carId = useDashboard((s) => s.carId);
   const cars = useCars((s) => s.cars);
   const ids = useCars((s) => s.ids);
-  return cars[carId] ?? cars[ids[0]] ?? CARS[0];
+  return cars[carId] ?? cars[ids[0]] ?? ALL_CARS[0];
 }
 
 /** List of all registered cars (for selectors / garages). */

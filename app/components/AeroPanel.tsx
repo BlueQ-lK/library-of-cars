@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { Car, AeroViewId } from "@/lib/cars";
 import { useDashboard } from "@/lib/store";
+import { F1_CAR_ID, resolveF1Setup } from "@/lib/f1";
 import {
   Wind,
   Layers,
@@ -44,6 +45,7 @@ export default function AeroPanel({ car }: { car: Car }) {
   const selectedId = useDashboard((s) => s.aeroComponent);
   const setComponent = useDashboard((s) => s.setAeroComponent);
   const toggleAeroMode = useDashboard((s) => s.toggleAeroMode);
+  const f1Setup = useDashboard((s) => s.f1Setup);
 
   const scenario =
     aero.scenarios.find((s) => s.id === scenarioId) ?? aero.scenarios[0];
@@ -51,13 +53,19 @@ export default function AeroPanel({ car }: { car: Car }) {
   const selected = aero.components.find((c) => c.id === selectedId);
   const m = scenario.metrics;
 
+  // For the F1 chassis the live Cd comes from the garage setup (wings/floor),
+  // so tuning in the garage is reflected here. Otherwise use the scenario Cd.
+  const isF1 = car.id === F1_CAR_ID;
+  const spec = isF1 ? resolveF1Setup(car, f1Setup) : null;
+  const cd = spec ? spec.cd : m.cd;
+
   // Physics: aerodynamic drag from the standard drag equation.
   // Fd = ½·ρ·Cd·A·v²  (ρ = air density, v = speed in m/s).
   const derivedArea = useDashboard((s) => s.derivedFrontalArea);
-  const frontalArea = derivedArea ?? aero.frontalAreaM2;
+  const frontalArea = derivedArea ?? (spec ? spec.frontalAreaM2 : aero.frontalAreaM2);
   const RHO = 1.225; // kg/m³ at sea level, 15 °C
   const vms = scenario.speedKmh / 3.6; // km/h → m/s
-  const dragForce = 0.5 * RHO * m.cd * frontalArea * vms * vms; // N
+  const dragForce = 0.5 * RHO * cd * frontalArea * vms * vms; // N
   const dragPowerKw = (dragForce * vms) / 1000; // P = F·v → kW to overcome drag
 
   return (
@@ -135,11 +143,27 @@ export default function AeroPanel({ car }: { car: Car }) {
               <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
                 {activeView.blurb}
               </p>
+              {isF1 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    FW {f1Setup.frontWing}
+                  </span>
+                  <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    RW {f1Setup.rearWing}
+                  </span>
+                  <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    {f1Setup.rideHeight} ride
+                  </span>
+                  <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium text-accent">
+                    {Math.round((spec?.downforce ?? 0) * 100)}% downforce
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Metrics */}
             <div className="grid grid-cols-2 gap-2">
-              <Stat label="Drag Cd" value={m.cd.toFixed(2)} />
+              <Stat label="Drag Cd" value={cd.toFixed(2)} />
               <Stat
                 label={derivedArea ? "Frontal Area ✓" : "Frontal Area"}
                 value={`${frontalArea.toFixed(2)}`}

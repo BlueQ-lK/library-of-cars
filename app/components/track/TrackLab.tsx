@@ -7,6 +7,7 @@ import { getTrack } from "@/lib/tracks";
 import { simulateLap } from "@/lib/lapsim";
 import type { SimCar } from "@/lib/lapsim";
 import { useDashboard } from "@/lib/store";
+import { F1_CAR_ID, resolveF1Setup, specToSim } from "@/lib/f1";
 import { useTrackAudio } from "@/lib/useTrackAudio";
 import { downloadResultCard } from "@/lib/shareCard";
 import TrackSidebar from "./TrackSidebar";
@@ -32,24 +33,35 @@ const PLAY_DURATION_S = 16; // real seconds to watch a full lap
 export default function TrackLab({ car }: { car: Car }) {
   const trackId = useDashboard((s) => s.trackId);
   const wet = useDashboard((s) => s.trackWet);
-  const downforce = useDashboard((s) => s.downforce);
+  const storeDownforce = useDashboard((s) => s.downforce);
   const setDownforce = useDashboard((s) => s.setDownforce);
   const setLabMode = useDashboard((s) => s.setLabMode);
+  const f1Setup = useDashboard((s) => s.f1Setup);
 
   const track = getTrack(trackId);
-  const grip = wet ? 0.78 : 1.0;
+  const isF1 = car.id === F1_CAR_ID;
 
-  const simCar: SimCar = useMemo(
-    () => ({
+  // Sim inputs come from the garage setup for the F1 chassis, otherwise from
+  // the car's base figures + the Track Lab downforce slider.
+  const { simCar, grip, downforce } = useMemo(() => {
+    if (isF1) {
+      const sim = specToSim(resolveF1Setup(car, f1Setup));
+      return {
+        simCar: sim.simCar,
+        grip: sim.grip * (wet ? 0.72 : 1),
+        downforce: sim.downforce,
+      };
+    }
+    const sc: SimCar = {
       powerHp: car.dyn.powerHp,
       massKg: car.dyn.massKg,
       topSpeedKmh: car.dyn.topSpeedKmh,
       cd: car.aero.cd,
       frontalAreaM2: car.aero.frontalAreaM2,
       gears: car.dyn.gears,
-    }),
-    [car],
-  );
+    };
+    return { simCar: sc, grip: wet ? 0.78 : 1.0, downforce: storeDownforce };
+  }, [isF1, car, f1Setup, wet, storeDownforce]);
 
   const result = useMemo(
     () => simulateLap(track, simCar, { grip, downforce }),
@@ -230,6 +242,17 @@ export default function TrackLab({ car }: { car: Car }) {
             best={best}
             downforce={downforce}
             setDownforce={setDownforce}
+            locked={isF1}
+            setupChips={
+              isF1
+                ? [
+                    `FW ${f1Setup.frontWing}`,
+                    `RW ${f1Setup.rearWing}`,
+                    `${f1Setup.rideHeight} ride`,
+                    `${f1Setup.tyre} tyres`,
+                  ]
+                : undefined
+            }
             onOpenReport={() => setReportOpen(true)}
           />
         </div>

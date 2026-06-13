@@ -15,6 +15,8 @@ export default function TrackResults({
   downforce,
   setDownforce,
   onOpenReport,
+  locked,
+  setupChips,
 }: {
   track: Track;
   result: SimResult;
@@ -22,6 +24,8 @@ export default function TrackResults({
   downforce: number;
   setDownforce: (d: number) => void;
   onOpenReport: () => void;
+  locked?: boolean;
+  setupChips?: string[];
 }) {
   const lapDelta = best ? result.lapTimeS - best.lapTimeS : 0;
   const isBest = !best || result.lapTimeS <= best.lapTimeS + 1e-6;
@@ -100,30 +104,63 @@ export default function TrackResults({
         </div>
       </section>
 
-      {/* Downforce setup */}
+      {/* Downforce setup (read-only summary for the F1 — set in the Garage) */}
       <section>
         <div className="mb-2 flex items-center gap-1.5">
-          <h3 className="tele-label">Downforce Setup</h3>
+          <h3 className="tele-label">{locked ? "Car Setup" : "Downforce Setup"}</h3>
           <Info size={12} className="text-faint" />
         </div>
-        <div className="mb-1 flex items-center justify-between text-[11px]">
-          <span className="text-muted-foreground">Low</span>
-          <span className="tele-readout font-semibold">{Math.round(downforce * 100)}%</span>
-          <span className="text-muted-foreground">High</span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={downforce}
-          onChange={(e) => setDownforce(Number(e.target.value))}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-surface-2 accent-accent"
-          aria-label="Downforce setup"
-        />
-        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-          More downforce = better cornering, lower top speed.
-        </p>
+
+        {locked ? (
+          <div>
+            <div className="mb-1 flex items-center justify-between text-[11px]">
+              <span className="text-muted-foreground">Downforce</span>
+              <span className="tele-readout font-semibold">{Math.round(downforce * 100)}%</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+              <div
+                className="h-full rounded-full bg-accent"
+                style={{ width: `${downforce * 100}%` }}
+              />
+            </div>
+            {setupChips && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {setupChips.map((c) => (
+                  <span
+                    key={c}
+                    className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              Locked to your garage setup. Tune it in the F1 Garage, then re-run.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-1 flex items-center justify-between text-[11px]">
+              <span className="text-muted-foreground">Low</span>
+              <span className="tele-readout font-semibold">{Math.round(downforce * 100)}%</span>
+              <span className="text-muted-foreground">High</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={downforce}
+              onChange={(e) => setDownforce(Number(e.target.value))}
+              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-surface-2 accent-accent"
+              aria-label="Downforce setup"
+            />
+            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              More downforce = better cornering, lower top speed.
+            </p>
+          </>
+        )}
       </section>
 
       <button

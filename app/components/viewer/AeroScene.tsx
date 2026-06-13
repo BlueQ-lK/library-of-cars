@@ -14,6 +14,7 @@ import * as THREE from "three";
 import CarModel from "./CarModel";
 import { useDashboard } from "@/lib/store";
 import { useCurrentCar } from "@/lib/carRegistry";
+import { F1_CAR_ID, resolveF1Setup } from "@/lib/f1";
 import type { AeroViewId, AeroScenario } from "@/lib/cars";
 
 type Axis = "x" | "z";
@@ -54,6 +55,7 @@ type Flow = {
   norm: number; // 0..1 (speed / 250)
   flowSpeed: number; // streamline / particle travel speed
   turb: number; // 0..1 turbulence intensity (wake)
+  df: number; // 0..1 downforce/drag bias (e.g. F1 wing setup) — grows the wake
 };
 
 /* ------------------------------------------------------------------ */
@@ -441,11 +443,17 @@ function WakeParticles({
     const geo = geoRef.current;
     if (!geo) return;
 
-    const active = Math.max(0, Math.round(lerp(140, WAKE_MAX, flow.norm) * intensity));
+    const active = Math.min(
+      WAKE_MAX,
+      Math.max(
+        0,
+        Math.round(lerp(140, WAKE_MAX, flow.norm) * intensity * (1 + flow.df * 0.4)),
+      ),
+    );
     const time = t.current;
     const turb = flow.turb;
-    // wake length grows with speed; particles are slower than freestream
-    const aEnd = halfLen + lerp(0.8, 2.6, flow.norm);
+    // wake length grows with speed and with downforce/drag setup
+    const aEnd = halfLen + lerp(0.8, 2.6, flow.norm) * (1 + flow.df * 0.6);
     const drift = 0.07 + flow.flowSpeed * 0.06;
 
     for (let i = 0; i < active; i++) {
@@ -705,19 +713,26 @@ export default function AeroScene({
   scenario: AeroScenario;
 }) {
   const car = useCurrentCar();
+  const f1Setup = useDashboard((s) => s.f1Setup);
 
-  // Derive visualization parameters from the scenario speed.
+  // For the F1 chassis, the wing/floor setup biases the wake (more downforce →
+  // more drag → larger, more turbulent wake).
+  const df =
+    car.id === F1_CAR_ID ? resolveF1Setup(car, f1Setup).downforce : 0;
+
+  // Derive visualization parameters from the scenario speed (+ setup bias).
   const flow: Flow = useMemo(() => {
     const norm = Math.min(1, Math.max(0, scenario.speedKmh / 250));
-    let turb = 0.15 + norm * 0.6;
+    let turb = 0.15 + norm * 0.6 + df * 0.25;
     if (scenario.yaw) turb += 0.15;
     if (scenario.wet) turb += 0.08;
     return {
       norm,
       flowSpeed: 0.25 + norm * 1.75,
       turb: Math.min(1, turb),
+      df,
     };
-  }, [scenario.speedKmh, scenario.yaw, scenario.wet]);
+  }, [scenario.speedKmh, scenario.yaw, scenario.wet, df]);
 
   return (
     <Canvas
