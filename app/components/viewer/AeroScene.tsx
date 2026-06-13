@@ -13,7 +13,7 @@ import {
 import * as THREE from "three";
 import CarModel from "./CarModel";
 import { useDashboard } from "@/lib/store";
-import { getCar } from "@/lib/cars";
+import { useCurrentCar } from "@/lib/carRegistry";
 import type { AeroViewId, AeroScenario } from "@/lib/cars";
 
 type Axis = "x" | "z";
@@ -704,8 +704,7 @@ export default function AeroScene({
   view: AeroViewId;
   scenario: AeroScenario;
 }) {
-  const carId = useDashboard((s) => s.carId);
-  const car = getCar(carId);
+  const car = useCurrentCar();
 
   // Derive visualization parameters from the scenario speed.
   const flow: Flow = useMemo(() => {

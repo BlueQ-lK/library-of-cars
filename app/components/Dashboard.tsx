@@ -1,6 +1,6 @@
 "use client";
 
-import { getCar } from "@/lib/cars";
+import { useCurrentCar } from "@/lib/carRegistry";
 import { useDashboard } from "@/lib/store";
 import IconRail from "./IconRail";
 import LeftSidebar from "./LeftSidebar";
@@ -13,8 +13,7 @@ import TrackLab from "./track/TrackLab";
 import { StageTabs, ThreeSixtyBadge, StageControls } from "./StageToolbar";
 
 export default function Dashboard() {
-  const carId = useDashboard((s) => s.carId);
-  const car = getCar(carId);
+  const car = useCurrentCar();
   const aeroMode = useDashboard((s) => s.aeroMode);
   const labMode = useDashboard((s) => s.labMode);
 

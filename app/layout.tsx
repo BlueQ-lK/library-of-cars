@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import CarDataProvider from "./components/CarDataProvider";
 
 export const metadata: Metadata = {
   title: "Tele-Car",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <CarDataProvider>{children}</CarDataProvider>
+      </body>
     </html>
   );
 }

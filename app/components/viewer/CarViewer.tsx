@@ -11,8 +11,7 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 import CarModel from "./CarModel";
-import { useDashboard } from "@/lib/store";
-import { getCar } from "@/lib/cars";
+import { useCurrentCar } from "@/lib/carRegistry";
 
 function Fallback() {
   return (
@@ -53,8 +52,7 @@ function ResponsiveCamera() {
 }
 
 export default function CarViewer() {
-  const carId = useDashboard((s) => s.carId);
-  const car = getCar(carId);
+  const car = useCurrentCar();
 
   return (
     <Canvas
